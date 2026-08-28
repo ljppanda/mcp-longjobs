@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * Demo server: shows the durable-task and chunked-file facades working on
  * today's MCP clients (no Tasks-extension support required).
@@ -5,6 +6,7 @@
  * Try it:
  *   npm run build
  *   node dist/examples/report-generator.js
+ *   (once published: npx mcp-longjobs)
  *
  * Point your client at it (stdio), e.g. for Claude Code / Cursor:
  *   { "command": "node", "args": ["<repo>/dist/examples/report-generator.js"] }

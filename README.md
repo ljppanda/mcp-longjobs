@@ -108,6 +108,8 @@ npm install && npm run build
 node dist/examples/report-generator.js
 ```
 
+(Once published to npm, the same server runs with a single command: `npx mcp-longjobs`.)
+
 Point your client at it (stdio):
 
 ```json

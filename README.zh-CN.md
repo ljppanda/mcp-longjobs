@@ -108,6 +108,8 @@ npm install && npm run build
 node dist/examples/report-generator.js
 ```
 
+（发布到 npm 后，一条命令即可运行同一个 server：`npx mcp-longjobs`。）
+
 把客户端指过去（stdio）：
 
 ```json
