@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.tsbuildinfo
+state/
+.longjobs-demo/
+*.log
+.DS_Store
+.mimosa/
