@@ -8,6 +8,16 @@ import {
   type SessionRecord,
 } from "../src/core/index.js";
 
+// node:sqlite does not exist on Node < 22.13 (CI still runs Node 20); the
+// store lazy-loads it, and this suite skips there instead of failing.
+let sqliteAvailable = false;
+try {
+  await import("node:sqlite");
+  sqliteAvailable = true;
+} catch {
+  sqliteAvailable = false;
+}
+
 function record(overrides: Partial<SessionRecord> = {}): SessionRecord {
   const now = new Date().toISOString();
   return {
@@ -21,7 +31,7 @@ function record(overrides: Partial<SessionRecord> = {}): SessionRecord {
   };
 }
 
-describe("sqlite session store", () => {
+describe.skipIf(!sqliteAvailable)("sqlite session store", () => {
   it("round-trips all field shapes (progress/result/error/cursor/meta)", async () => {
     const dir = mkdtempSync(join(tmpdir(), "longjobs-sqlite-"));
     const file = join(dir, "state.db");
