@@ -1,6 +1,6 @@
 {
   "name": "mcp-longjobs",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Durable, resumable operations for MCP servers: long-running tasks and chunked file transfers that survive timeouts, disconnects, and client restarts — on every client, no Tasks-extension support required.",
   "type": "module",
   "license": "MIT",
