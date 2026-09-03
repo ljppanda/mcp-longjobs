@@ -17,11 +17,13 @@ import {
 import { dirname, join, resolve } from "node:path";
 import {
   MemorySessionStore,
+  isExpired,
   newId,
   textResult,
   type SessionRecord,
   type SessionStore,
   type ToolRegistrar,
+  type ToolResult,
 } from "../core/index.js";
 import { isInsideRoot } from "./path-safety.js";
 
@@ -80,6 +82,19 @@ export function withFileTransfer(
       retryable: false,
       recoveryHint: "The handle may be mistyped or expired. Ask the user whether to open a new transfer.",
     });
+  }
+
+  /** Lazily expire a stale non-terminal transfer and return its failure result. */
+  async function expireIfNeeded(rec: SessionRecord, handle: string): Promise<ToolResult | null> {
+    if (!isExpired(rec)) return null;
+    const error = {
+      code: "transfer_expired",
+      message: "The transfer's TTL expired before it completed.",
+      retryable: true,
+      recoveryHint: "Open a new transfer session (file_transfer_open) and start again — staged bytes from an expired session are discarded.",
+    };
+    await store.update(handle, { status: "failed", error });
+    return textResult({ handle, status: "failed", error });
   }
 
   async function hashFile(path: string): Promise<string> {
@@ -207,6 +222,8 @@ export function withFileTransfer(
     if (!rec || rec.kind !== "transfer" || rec.meta?.["direction"] !== "upload") {
       return unknownHandle(a.handle);
     }
+    const expired = await expireIfNeeded(rec, a.handle);
+    if (expired) return expired;
     if (rec.status !== "working") {
       return envelopeError({
         code: "not_active",
@@ -257,6 +274,8 @@ export function withFileTransfer(
     if (!rec || rec.kind !== "transfer" || rec.meta?.["direction"] !== "download") {
       return unknownHandle(a.handle);
     }
+    const expired = await expireIfNeeded(rec, a.handle);
+    if (expired) return expired;
     const path = rec.meta!["path"] as string;
     const size = statSync(path).size;
     const offset = Math.min(a.offset ?? (typeof rec.cursor === "number" ? rec.cursor : 0), size);
@@ -297,6 +316,8 @@ export function withFileTransfer(
     if (!rec || rec.kind !== "transfer" || rec.meta?.["direction"] !== "upload") {
       return unknownHandle(handle);
     }
+    const expired = await expireIfNeeded(rec, handle);
+    if (expired) return expired;
     if (rec.status !== "working") {
       return textResult({ handle, status: rec.status });
     }
@@ -354,6 +375,8 @@ export function withFileTransfer(
     const { handle } = args as { handle: string };
     const rec = await store.get(handle);
     if (!rec) return unknownHandle(handle);
+    const expired = await expireIfNeeded(rec, handle);
+    if (expired) return expired;
     return textResult({
       handle,
       status: rec.status,

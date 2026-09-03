@@ -126,4 +126,30 @@ describe("withTasks fallback facade", () => {
     expect(res.error.code).toBe("unknown_task");
     expect(res.error.retryable).toBe(false);
   });
+
+  it("expired tasks are failed lazily with a repairable envelope", async () => {
+    const fake = new FakeRegistrar();
+    const store = new MemorySessionStore();
+    const tasks = withTasks(fake, { store });
+    tasks.taskTool("placeholder", {}, async () => ({ ok: true }));
+
+    const now = new Date().toISOString();
+    await store.create({
+      id: "task_old",
+      kind: "task",
+      tool: "placeholder",
+      status: "working",
+      createdAt: new Date(Date.now() - 10_000).toISOString(),
+      updatedAt: now,
+      ttlMs: 1_000,
+    });
+
+    const res = structured(await fake.invoke("durable_task_get", { taskId: "task_old" }));
+    expect(res.status).toBe("failed");
+    expect(res.error.code).toBe("expired");
+    expect(res.error.retryable).toBe(true);
+    // The expiry is persisted, so subsequent polls see the same terminal state.
+    const again = structured(await fake.invoke("durable_task_get", { taskId: "task_old" }));
+    expect(again.status).toBe("failed");
+  });
 });

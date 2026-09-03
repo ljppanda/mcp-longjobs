@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isTerminal, textResult, type ToolRegistrar, type ToolResult } from "../core/index.js";
+import { isExpired, isTerminal, textResult, type ToolRegistrar, type ToolResult } from "../core/index.js";
 import type { TaskRuntime } from "./types.js";
 
 export function unknownTask(taskId: string): ToolResult {
@@ -32,6 +32,18 @@ export function installFacade(rt: TaskRuntime, registrar: ToolRegistrar): void {
     const { taskId } = args as { taskId: string };
     const rec = await rt.store.get(taskId);
     if (!rec) return unknownTask(taskId);
+
+    // Lazy TTL enforcement: a task nobody polled to completion expires.
+    if (isExpired(rec)) {
+      const error = {
+        code: "expired",
+        message: "The task's TTL expired before it completed (likely nothing polled it in time).",
+        retryable: true,
+        recoveryHint: "Re-run the original tool to start a fresh task.",
+      };
+      await rt.store.update(taskId, { status: "failed", error });
+      return textResult({ taskId, status: "failed", tool: rec.tool ?? null, error });
+    }
 
     if (rec.status === "input_required") {
       return textResult({

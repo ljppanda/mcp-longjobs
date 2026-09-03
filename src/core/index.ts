@@ -6,3 +6,4 @@ export * from "./text-result.js";
 export * from "./types.js";
 export * from "./stores/memory-store.js";
 export * from "./stores/json-file-store.js";
+export * from "./stores/sqlite-store.js";

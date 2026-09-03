@@ -131,4 +131,37 @@ describe("file transfer facade", () => {
     expect(res.error.code).toBe("invalid_param");
     expect(res.error.param).toBe("path");
   });
+
+  it("expired transfers fail lazily with a repairable envelope", async () => {
+    const store = new MemorySessionStore();
+    const expired = new FakeRegistrar();
+    withFileTransfer(expired, {
+      store,
+      storageDir: join(dir, "storage-expired"),
+      allowedRoots: [dir],
+    });
+
+    const now = new Date().toISOString();
+    await store.create({
+      id: "file_old",
+      kind: "transfer",
+      status: "working",
+      createdAt: new Date(Date.now() - 20_000).toISOString(),
+      updatedAt: now,
+      ttlMs: 1_000,
+      cursor: 0,
+      meta: { direction: "upload", path: join(dir, "out.txt"), stagingPath: join(dir, "x.part") },
+    });
+
+    const res = structured(
+      await expired.invoke("file_transfer_write", {
+        handle: "file_old",
+        offset: 0,
+        data: Buffer.from("abc").toString("base64"),
+      }),
+    );
+    expect(res.status).toBe("failed");
+    expect(res.error.code).toBe("transfer_expired");
+    expect(res.error.retryable).toBe(true);
+  });
 });

@@ -93,11 +93,12 @@ Failures are **data, not protocol errors** — a structured envelope the model c
 | Component | Status |
 | --- | --- |
 | Tasks fallback facade (progress / input / cancel) | ✅ implemented |
-| Durable session stores (memory, JSON file) | ✅ implemented |
+| Durable session stores (memory, JSON file, SQLite) | ✅ implemented |
+| Session TTL expiry (lazy, repairable envelope) | ✅ implemented |
 | Chunked file transfer with resume + checksums | ✅ implemented |
 | Native ext-tasks adapter (`CreateTaskResult` / `tasks/get`) | 🔜 tracks the SDK's experimental Tasks API |
 | TUS 1.0 out-of-band endpoint for large files | 🔜 planned — see [mcp#189](https://github.com/modelcontextprotocol/modelcontextprotocol/issues/189) |
-| Redis / SQLite stores, Python port | 🔜 planned |
+| Redis store, Python port | 🔜 planned |
 
 ## Quickstart
 

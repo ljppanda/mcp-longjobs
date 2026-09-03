@@ -21,6 +21,15 @@ export function isTerminal(status: SessionStatus): boolean {
   return TERMINAL_STATUSES.includes(status);
 }
 
+/**
+ * A non-terminal session is expired once `ttlMs` has elapsed since creation.
+ * Expiry is enforced lazily by the facades when a record is read — nothing
+ * needs a background sweeper for correctness.
+ */
+export function isExpired(record: SessionRecord, now: number = Date.now()): boolean {
+  return !isTerminal(record.status) && now - Date.parse(record.createdAt) > record.ttlMs;
+}
+
 export interface SessionRecord {
   id: string;
   /** "task" = long-running operation; "transfer" = chunked file transfer. */

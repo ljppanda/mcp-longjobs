@@ -93,11 +93,12 @@ withFileTransfer(registrar, { store, storageDir: "./state/blobs" });
 | 组件 | 状态 |
 | --- | --- |
 | Tasks 降级 facade（进度 / 输入 / 取消） | ✅ 已实现 |
-| 持久会话存储（内存、JSON 文件） | ✅ 已实现 |
+| 持久会话存储（内存、JSON 文件、SQLite） | ✅ 已实现 |
+| 会话 TTL 过期（惰性执行，可修复信封） | ✅ 已实现 |
 | 分片文件传输（断点续传 + 校验和） | ✅ 已实现 |
 | 原生 ext-tasks 适配器（`CreateTaskResult` / `tasks/get`） | 🔜 跟进 SDK 的实验性 Tasks API |
 | TUS 1.0 带外大文件端点 | 🔜 规划中——见 [mcp#189](https://github.com/modelcontextprotocol/modelcontextprotocol/issues/189) |
-| Redis / SQLite 存储、Python 版 | 🔜 规划中 |
+| Redis 存储、Python 版 | 🔜 规划中 |
 
 ## 快速开始
 

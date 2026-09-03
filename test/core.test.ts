@@ -6,6 +6,7 @@ import {
   DurableError,
   JsonFileSessionStore,
   MemorySessionStore,
+  isExpired,
   isTerminal,
   serializeError,
   sha256Hex,
@@ -102,6 +103,17 @@ describe("misc core", () => {
     expect(isTerminal("cancelled")).toBe(true);
     expect(isTerminal("working")).toBe(false);
     expect(isTerminal("input_required")).toBe(false);
+  });
+
+  it("isExpired only flags non-terminal sessions past their ttl", () => {
+    const now = Date.now();
+    const stale = record({ createdAt: new Date(now - 10_000).toISOString(), ttlMs: 1_000 });
+    expect(isExpired(stale, now)).toBe(true);
+    const fresh = record({ createdAt: new Date(now - 500).toISOString(), ttlMs: 1_000 });
+    expect(isExpired(fresh, now)).toBe(false);
+    // Terminal sessions never expire, however old.
+    const oldDone = record({ status: "completed", createdAt: new Date(now - 3_600_000).toISOString(), ttlMs: 1_000 });
+    expect(isExpired(oldDone, now)).toBe(false);
   });
 
   it("isInsideRoot blocks path traversal", () => {
